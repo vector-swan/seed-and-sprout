@@ -224,12 +224,14 @@ button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
   will-change: transform; /* keeps the watercolor art painted once, so moving a tile never repaints it */
 }
 .tiles.dragging .tile { transition: opacity 0.13s; }
-.face { position: relative; width: 100%; height: 100%; box-sizing: border-box; padding-bottom: 9px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; }
+.face { position: relative; width: 100%; height: 100%; }
 .face .wash { position: absolute; inset: 0; border-radius: 14px; background: var(--wimg) center / 100% 100% no-repeat; box-shadow: var(--tile-shadow); }
 .face.big .wash { box-shadow: var(--tile-glow), 0 0 0 3px var(--gold); }
-.face .artbox { position: relative; width: 92%; max-height: 66%; aspect-ratio: 1; display: flex; align-items: center; justify-content: center; }
+/* Fixed layout on every card: the picture always sits in the same spot, with room kept for a two-line name below,
+   so a long name never pushes the art and a merge never shifts it */
+.face .artbox { position: absolute; top: 5%; left: 50%; translate: -50% 0; height: 60%; aspect-ratio: 1; display: flex; align-items: center; justify-content: center; }
 .artbox .art { flex: none; height: auto; aspect-ratio: 1; pointer-events: none; -webkit-user-drag: none; user-select: none; }
-.face .name { position: relative; font-size: 11.5px; font-weight: 700; color: var(--tile-ink); text-align: center; line-height: 1.05; padding: 0 2px; max-width: 100%; letter-spacing: -0.01em; overflow-wrap: anywhere; hyphens: manual; }
+.face .name { position: absolute; left: 2px; right: 2px; bottom: 7%; height: 25px; display: flex; align-items: center; justify-content: center; font-size: 11.5px; font-weight: 700; color: var(--tile-ink); text-align: center; line-height: 1.05; letter-spacing: -0.01em; overflow-wrap: anywhere; }
 @media (max-width: 370px) { .face .name { font-size: 10.5px; } }
 .tile.hint .wash { box-shadow: 0 0 0 3px var(--gold), var(--tile-glow); }
 .tile.pop .face { animation: pop 0.19s cubic-bezier(0.2, 0.8, 0.3, 1); }
