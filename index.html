@@ -44,11 +44,57 @@
   --font-display: "Fredoka", "Nunito", "Segoe UI", system-ui, sans-serif;
   --font-body: "Nunito", "Segoe UI", system-ui, sans-serif;
   --gap: 8px;
+  --tile-ink: #4a4157;            /* names on tiles stay dark: tiles are light in both themes */
+  --dot-bg: #fffaf7;
+  --panel-bg: rgba(255, 250, 247, 0.96);
+  --veil: rgba(251, 246, 241, 0.9);
+  --journal: #fffdf8;
+  --journal-line: rgba(122,106,166,0.09);
+  --switch-off: #d9d3e4;
+  --title-paint: linear-gradient(95deg, #8f7cc4 0%, #b58ab8 55%, #d49aa8 100%);
+  --page: var(--paper);
+  --bed-shadow: 0 10px 30px rgba(60,50,90,0.14);
+  --tile-shadow: 0 0 12px rgba(255,255,255,0.85), 0 3px 7px rgba(120,100,140,0.10);
+  --grain-blend: multiply;
+}
+/* Night Garden: deep indigo sky, a low moon and fireflies. The tiles stay pale, like paper lanterns,
+   with a warm glow, so the watercolor plants read exactly as they do by day. */
+:root[data-theme="night"] {
+  color-scheme: dark;
+  --paper: #17162c;
+  --page: radial-gradient(120% 70% at 80% 0%, #2c2a52 0%, rgba(44,42,82,0) 60%), linear-gradient(180deg, #1d1b38 0%, #15142a 60%, #121a22 100%);
+  --ink: #eee8f7;
+  --mist: #b4abcb;
+  --accent: #c7b8f2;
+  --label: #d7cfe8;
+  --cream: #2b2848;
+  --strip-line: rgba(199,184,242,0.22);
+  --bed: radial-gradient(55% 40% at 72% 18%, rgba(190,215,220,0.16), rgba(190,215,220,0) 70%), radial-gradient(60% 45% at 25% 85%, rgba(120,160,120,0.18), rgba(120,160,120,0) 70%), linear-gradient(170deg, #34463f 0%, #26332f 100%);
+  --slot: rgba(5, 12, 10, 0.26);
+  --tile-glow: 0 0 16px rgba(255,226,160,0.28), 0 2px 0 rgba(0,0,0,0.25);
+  --tile-shadow: 0 0 14px rgba(255,226,160,0.22), 0 4px 10px rgba(0,0,0,0.35);
+  --pearl: rgba(43, 40, 72, 0.9);
+  --pearl-glow: 0 0 14px rgba(199,184,242,0.18);
+  --halo: rgba(255, 228, 150, 0.85);
+  --gold-soft: #4a3f22;
+  --line: rgba(199,184,242,0.22);
+  --ring: inset 0 0 0 1.5px rgba(199,184,242,0.28), 0 3px 10px rgba(0,0,0,0.35);
+  --dot-bg: #f6f0e8;
+  --panel-bg: rgba(35, 32, 62, 0.97);
+  --veil: rgba(23, 22, 44, 0.88);
+  --journal: #211f3b;
+  --journal-line: rgba(199,184,242,0.07);
+  --switch-off: #4a4568;
+  --title-paint: linear-gradient(95deg, #cbbaff 0%, #e2b6e6 55%, #f6c6c4 100%);
+  --bed-shadow: 0 10px 34px rgba(0,0,0,0.45), 0 0 40px rgba(150,190,170,0.08);
+  --grain-blend: soft-light;
 }
 [hidden] { display: none !important; }
 html, body { min-height: 100%; }
+html { background: var(--paper); }
 body {
-  background-color: var(--paper);
+  background: var(--page);
+  background-attachment: fixed;
   color: var(--ink);
   font-family: var(--font-body); font-size: 15px;
   padding-left: max(16px, env(safe-area-inset-left, 0px));
@@ -61,18 +107,39 @@ body {
 .sky { z-index: 0; }
 .drift { z-index: 0; }
 .sky .wash { position: absolute; filter: url(#wash); }
-.sky .grain { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0.16; mix-blend-mode: multiply; }
+.sky .grain { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0.16; mix-blend-mode: var(--grain-blend); }
 .petal { position: absolute; width: 9px; height: 6px; border-radius: 60% 40% 60% 40%; opacity: 0.85; animation: fall 10s linear infinite; will-change: transform, opacity; }
 .fluff { position: absolute; width: 7px; height: 7px; border-radius: 50%; background: radial-gradient(circle, rgba(255,255,255,0.95) 0 25%, rgba(255,255,255,0.35) 45%, rgba(255,255,255,0) 70%); animation: floaty 13s ease-in-out infinite; will-change: transform, opacity; }
 @keyframes fall { 0% { transform: translate(0, -40px) rotate(0deg); opacity: 0 } 10% { opacity: 0.85 } 100% { transform: translate(-70px, 280px) rotate(220deg); opacity: 0 } }
 @keyframes floaty { 0% { transform: translate(0, 0); opacity: 0 } 20% { opacity: 0.9 } 100% { transform: translate(40px, -80px); opacity: 0 } }
+[data-theme="night"] .link .dot { box-shadow: 0 0 12px rgba(255,226,160,0.22), inset 0 0 0 1px rgba(0,0,0,0.08); }
+[data-theme="night"] .loghead { border-bottom-color: rgba(242,160,180,0.3); }
+[data-theme="night"] .newbest { color: #f6e3b0; box-shadow: none; }
+.moon { position: absolute; border-radius: 50%; background: radial-gradient(circle at 42% 40%, #fffaf0 0%, #f6efdd 45%, #e8dfcb 100%);
+  -webkit-mask-image: radial-gradient(circle at 74% 30%, transparent 46%, #000 48%); mask-image: radial-gradient(circle at 74% 30%, transparent 46%, #000 48%);
+  filter: drop-shadow(0 0 8px rgba(255,246,220,0.55)) drop-shadow(0 0 22px rgba(200,190,255,0.3)); }
+.star { position: absolute; width: 3px; height: 3px; border-radius: 50%; background: #fff8e6; box-shadow: 0 0 5px rgba(255,248,230,0.9); animation: starlight 4s ease-in-out infinite; }
+@keyframes starlight { 0%, 100% { opacity: 0.25 } 50% { opacity: 0.95 } }
+.firefly { position: absolute; width: 5px; height: 5px; border-radius: 50%; background: #fff2b0;
+  box-shadow: 0 0 6px 2px rgba(255,232,140,0.85), 0 0 18px 6px rgba(255,220,120,0.35); animation: firefly 11s ease-in-out infinite; will-change: transform, opacity; }
+@keyframes firefly { 0% { transform: translate(0, 0); opacity: 0 } 15% { opacity: 1 } 30% { opacity: 0.25 } 45% { opacity: 1 }
+  60% { transform: translate(28px, -36px); opacity: 0.35 } 75% { opacity: 1 } 100% { transform: translate(-12px, -70px); opacity: 0 } }
+.themes { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.themebtn { display: flex; flex-direction: column; align-items: stretch; gap: 6px; padding: 6px; border: none; border-radius: 14px; background: transparent;
+  box-shadow: inset 0 0 0 1.5px var(--line); color: var(--ink); font-size: 13px; font-weight: 800; }
+.themebtn[aria-pressed="true"] { box-shadow: inset 0 0 0 2px var(--accent); }
+.themebtn .sw { height: 34px; border-radius: 9px; position: relative; overflow: hidden; }
+.themebtn .sw.dawn { background: linear-gradient(170deg, #f3e2ec 0%, #e9e2f6 45%, #d9e5d2 100%); }
+.themebtn .sw.night { background: linear-gradient(170deg, #2c2a52 0%, #1d1b38 55%, #34463f 100%); }
+.themebtn .sw.night::after { content: ""; position: absolute; right: 9px; top: 6px; width: 11px; height: 11px; border-radius: 50%; background: #fbf4e2; box-shadow: 0 0 8px rgba(255,246,220,0.7); }
+.themebtn .sw.dawn::after { content: ""; position: absolute; right: 9px; top: 7px; width: 11px; height: 11px; border-radius: 50%; background: #fde3d3; box-shadow: 0 0 8px rgba(255,220,200,0.9); }
 .wrap { position: relative; z-index: 1; max-width: 358px; margin: 0 auto; display: flex; flex-direction: column; gap: 16px; }
 
 .titlerow { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
 .titlebtns { display: flex; gap: 6px; flex: none; }
 .titlerow { position: relative; }
 .sndpanel { position: absolute; top: calc(100% + 8px); right: 0; z-index: 20; width: min(300px, 100%); box-sizing: border-box; padding: 16px 18px 18px;
-  border-radius: 22px; background: rgba(255, 250, 247, 0.96); box-shadow: 0 0 0 1px var(--line), 0 10px 30px rgba(90, 70, 120, 0.16), var(--pearl-glow);
+  border-radius: 22px; background: var(--panel-bg); box-shadow: 0 0 0 1px var(--line), 0 10px 30px rgba(30, 20, 60, 0.22), var(--pearl-glow);
   -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); display: flex; flex-direction: column; gap: 16px; }
 .sndpanel h3 { margin: 0; font-family: var(--font-display); font-weight: 600; font-size: 20px; color: var(--accent); }
 .sndrow { display: flex; flex-direction: column; gap: 6px; }
@@ -82,14 +149,14 @@ body {
 .sndhint { font-size: 12px; color: var(--mist); }
 .sndrow input[type="range"] { width: 100%; accent-color: var(--accent); margin: 2px 0; height: 24px; }
 .sndrow.off input[type="range"], .sndrow.off .sndval { opacity: 0.4; }
-.switch { position: relative; width: 46px; height: 28px; flex: none; border: none; border-radius: 999px; background: #d9d3e4; padding: 0; transition: background .2s; }
+.switch { position: relative; width: 46px; height: 28px; flex: none; border: none; border-radius: 999px; background: var(--switch-off); padding: 0; transition: background .2s; }
 .switch::after { content: ""; position: absolute; top: 3px; left: 3px; width: 22px; height: 22px; border-radius: 50%; background: #fff; box-shadow: 0 1px 3px rgba(60,40,90,0.25); transition: transform .2s; }
 .switch[aria-checked="true"] { background: var(--accent); }
 .switch[aria-checked="true"]::after { transform: translateX(18px); }
 @media (prefers-reduced-motion: reduce) { .switch, .switch::after { transition: none; } }
 /* Painted lettering: soft rounded letters filled with a lavender-to-rose watercolor wash */
 h1 { font-family: var(--font-display); font-weight: 600; font-size: clamp(28px, 9vw, 40px); line-height: 1.1; margin: 0; white-space: nowrap; min-width: 0; letter-spacing: 0.01em;
-  color: var(--accent); background: linear-gradient(95deg, #8f7cc4 0%, #b58ab8 55%, #d49aa8 100%); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; filter: url(#paint); }
+  color: var(--accent); background: var(--title-paint); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; filter: url(#paint); }
 .tagline { margin: 0; font-size: 13px; color: var(--mist); }
 
 button { font-family: var(--font-body); cursor: pointer; }
@@ -131,7 +198,7 @@ button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 .board {
   position: relative; width: 100%; aspect-ratio: 5 / 6; max-width: 100%; touch-action: none; user-select: none;
 }
-.board .bg { position: absolute; inset: 0; border-radius: 28px; background: var(--bed); box-shadow: 0 10px 30px rgba(60,50,90,0.14); filter: url(#edge); }
+.board .bg { position: absolute; inset: 0; border-radius: 28px; background: var(--bed); box-shadow: var(--bed-shadow); filter: url(#edge); }
 .board.nudge { animation: nudge 0.22s; }
 @keyframes nudge { 30% { transform: translateX(-4px); } 70% { transform: translateX(4px); } }
 .slots, .tiles { position: absolute; inset: 12px; }
@@ -148,11 +215,11 @@ button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 }
 .tiles.dragging .tile { transition: opacity 0.13s; }
 .face { position: relative; width: 100%; height: 100%; box-sizing: border-box; padding-bottom: 12px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; }
-.face .wash { position: absolute; inset: 0; border-radius: 14px; background: var(--wimg) center / 100% 100% no-repeat; box-shadow: 0 0 12px rgba(255,255,255,0.85), 0 3px 7px rgba(120,100,140,0.10); }
+.face .wash { position: absolute; inset: 0; border-radius: 14px; background: var(--wimg) center / 100% 100% no-repeat; box-shadow: var(--tile-shadow); }
 .face.big .wash { box-shadow: var(--tile-glow), 0 0 0 3px var(--gold); }
 .face .artbox { position: relative; width: 92%; max-height: 74%; aspect-ratio: 1; display: flex; align-items: center; justify-content: center; }
 .artbox .art { flex: none; height: auto; aspect-ratio: 1; pointer-events: none; -webkit-user-drag: none; user-select: none; }
-.face .name { position: relative; font-size: 9px; font-weight: 800; color: var(--ink); text-align: center; line-height: 1.1; padding: 0 3px; white-space: nowrap; letter-spacing: -0.01em; }
+.face .name { position: relative; font-size: 9px; font-weight: 800; color: var(--tile-ink); text-align: center; line-height: 1.1; padding: 0 3px; white-space: nowrap; letter-spacing: -0.01em; }
 .tile.hint .wash { box-shadow: 0 0 0 3px var(--gold), var(--tile-glow); }
 .tile.pop .face { animation: pop 0.19s cubic-bezier(0.2, 0.8, 0.3, 1); }
 @keyframes pop { 40% { transform: scale(1.08); } }
@@ -179,11 +246,11 @@ button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 
 .overlay {
   position: absolute; inset: 0; z-index: 5; display: flex; flex-direction: column; align-items: center; justify-content: center;
-  gap: 10px; text-align: center; padding: 24px; background: rgba(251, 246, 241, 0.9); border-radius: 28px; color: var(--ink);
+  gap: 10px; text-align: center; padding: 24px; background: var(--veil); border-radius: 28px; color: var(--ink);
   -webkit-backdrop-filter: blur(4px); backdrop-filter: blur(4px);
 }
 .overlay h2 { font-family: var(--font-display); font-weight: 600; font-size: 32px; line-height: 1.1; margin: 0;
-  color: var(--accent); background: linear-gradient(95deg, #8f7cc4 0%, #b58ab8 55%, #d49aa8 100%); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; filter: url(#paint); }
+  color: var(--accent); background: var(--title-paint); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; filter: url(#paint); }
 .overlay p { margin: 0; color: var(--mist); max-width: 30ch; line-height: 1.45; }
 .overlay .stats { display: flex; flex-direction: column; gap: 6px; padding: 10px 14px; border-radius: 16px; background: var(--cream); box-shadow: var(--tile-glow); min-width: 220px; }
 .overlay .stats div { display: flex; justify-content: space-between; gap: 16px; font-size: 13px; }
@@ -197,7 +264,7 @@ button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 
 /* Garden log: a little journal page on light grid paper, listing every plant you've ever grown in growing order */
 .log { display: flex; flex-direction: column; gap: 4px; margin-top: 6px; padding: 22px 18px; border-radius: 18px;
-  background-color: #fffdf8; background-image: linear-gradient(rgba(122,106,166,0.09) 1px, transparent 1px), linear-gradient(90deg, rgba(122,106,166,0.09) 1px, transparent 1px);
+  background-color: var(--journal); background-image: linear-gradient(var(--journal-line) 1px, transparent 1px), linear-gradient(90deg, var(--journal-line) 1px, transparent 1px);
   background-size: 14px 14px; background-position: -1px -1px;
   box-shadow: 0 1px 0 rgba(120,100,140,0.10), 0 8px 22px rgba(90,70,120,0.10), 0 0 0 1px rgba(122,106,166,0.10); }
 .loghead { display: flex; justify-content: space-between; align-items: flex-end; gap: 10px; padding-bottom: 10px; border-bottom: 1.5px solid rgba(242,160,180,0.45); }
@@ -206,7 +273,7 @@ button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 .loghead > span { font-size: 12px; font-weight: 800; color: var(--mist); white-space: nowrap; }
 .chain { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); grid-auto-flow: column; column-gap: 10px; }
 .link { display: flex; align-items: center; gap: 10px; min-width: 0; padding: 8px 0; }
-.link .dot { width: 54px; height: 54px; flex: none; border-radius: 50%; overflow: hidden; background: var(--cream); box-shadow: 0 0 10px rgba(255,255,255,0.9), inset 0 0 0 1px rgba(122,106,166,0.16); display: flex; align-items: center; justify-content: center; }
+.link .dot { width: 54px; height: 54px; flex: none; border-radius: 50%; overflow: hidden; background: var(--dot-bg); box-shadow: 0 0 10px rgba(255,255,255,0.9), inset 0 0 0 1px rgba(122,106,166,0.16); display: flex; align-items: center; justify-content: center; }
 .link .dot .artbox { width: 54px; height: 54px; display: flex; align-items: center; justify-content: center; }
 .link b { display: block; font-family: var(--font-display); font-weight: 600; font-size: 15px; line-height: 1.15; color: var(--ink); overflow-wrap: anywhere; }
 .link small { display: block; font-size: 11px; line-height: 1.3; color: var(--mist); }
@@ -215,8 +282,8 @@ button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 .proto { font-size: 11px; color: var(--mist); margin: 0; text-align: center; }
 
 @media (prefers-reduced-motion: reduce) {
-  .tile.pop .face, .board.nudge, .petal, .fluff, .tile .halo, .tile .spk { animation: none; }
-  .petal, .fluff { display: none; }
+  .tile.pop .face, .board.nudge, .petal, .fluff, .firefly, .star, .tile .halo, .tile .spk { animation: none; }
+  .petal, .fluff, .firefly { display: none; }
 }
 </style>
 </head>
@@ -240,10 +307,15 @@ button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
   <div class="titlerow">
     <h1>Seed &amp; Sprout</h1>
     <div class="titlebtns">
-    <button class="round" id="sound" type="button" aria-label="Sound settings" aria-expanded="false" aria-controls="sndPanel"><svg id="soundOn" width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9.5h3.5L12 6v12l-4.5-3.5H4z"/><path d="M15.5 9.5a3.5 3.5 0 0 1 0 5"/><path d="M18 7a7 7 0 0 1 0 10"/></svg><svg id="soundOff" hidden width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9.5h3.5L12 6v12l-4.5-3.5H4z"/><path d="M16 10l4 4"/><path d="M20 10l-4 4"/></svg></button>
+    <button class="round" id="sound" type="button" aria-label="Settings" aria-expanded="false" aria-controls="sndPanel"><svg id="soundOn" width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9.5h3.5L12 6v12l-4.5-3.5H4z"/><path d="M15.5 9.5a3.5 3.5 0 0 1 0 5"/><path d="M18 7a7 7 0 0 1 0 10"/></svg><svg id="soundOff" hidden width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9.5h3.5L12 6v12l-4.5-3.5H4z"/><path d="M16 10l4 4"/><path d="M20 10l-4 4"/></svg></button>
     <button class="round" id="restart" type="button" aria-label="New game"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14"/><path d="M5 12h14"/></svg></button>
     </div>
-    <div class="sndpanel" id="sndPanel" role="dialog" aria-label="Sound settings" hidden>
+    <div class="sndpanel" id="sndPanel" role="dialog" aria-label="Settings" hidden>
+      <h3>Garden</h3>
+      <div class="themes" role="group" aria-label="Theme">
+        <button class="themebtn" type="button" data-theme-pick="dawn" aria-pressed="true"><span class="sw dawn" aria-hidden="true"></span>Dawn Meadow</button>
+        <button class="themebtn" type="button" data-theme-pick="night" aria-pressed="false"><span class="sw night" aria-hidden="true"></span>Night Garden</button>
+      </div>
       <h3>Sound</h3>
       <div class="sndrow">
         <div class="sndtop"><label for="fxVol">Sound Effects</label><span class="sndval" id="fxVal">50%</span><button class="switch" id="fxOn" type="button" role="switch" aria-checked="true" aria-label="Sound effects"></button></div>
@@ -1127,11 +1199,16 @@ button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
   boardEl.addEventListener("pointercancel", () => endDrag(true));
 
   // ---------- Painted dawn sky and drifting petals ----------
-  (function paintSky() {
+  function paintSky(theme) {
     const sky = $("sky"), drift = $("drift");
     // left, top, width, height (in % of the screen), color, opacity, rounded shape
-    // Fewer, paler washes so the sky stays calm behind the board
-    const washes = [
+    const washes = theme === "night" ? [
+      [-24, -6, 84, 30, "#3d3577", 0.45, "48% 52% 58% 42% / 50% 44% 56% 50%"],
+      [40, 8, 80, 28, "#463a72", 0.35, "55% 45% 40% 60% / 45% 55% 45% 55%"],
+      [-20, 44, 66, 32, "#2a3a5e", 0.4, "45% 55% 55% 45% / 50% 50% 50% 50%"],
+      [56, 50, 60, 30, "#3b2f5c", 0.35, "58% 42% 50% 50% / 46% 54% 46% 54%"],
+      [0, 78, 100, 30, "#22403a", 0.5, "44% 56% 56% 44% / 50% 50% 50% 50%"]
+    ] : [
       [-22, -8, 80, 28, "#cbb9e8", 0.22, "48% 52% 58% 42% / 50% 44% 56% 50%"],
       [42, -9, 76, 30, "#f2b9c9", 0.20, "55% 45% 40% 60% / 45% 55% 45% 55%"],
       [-18, 40, 64, 30, "#f6d3c0", 0.16, "45% 55% 55% 45% / 50% 50% 50% 50%"],
@@ -1139,15 +1216,35 @@ button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
       [8, 74, 90, 30, "#d3e3c6", 0.20, "44% 56% 56% 44% / 50% 50% 50% 50%"],
       [70, -13, 50, 30, "#fff0ec", 0.7, "50%"]
     ];
-    sky.innerHTML = washes.map(([l, t, w, h, c, o, r]) =>
-      `<div class="wash" style="left:${l}%;top:${t}%;width:${w}%;height:${h}%;border-radius:${r};background:${c};opacity:${o}"></div>`).join("") +
-      '<svg class="grain"><rect width="100%" height="100%" filter="url(#grain)"/></svg>';
     let seed = 7; const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
-    let html = "";
-    for (let i = 0; i < 10; i++) html += `<span class="petal" style="left:${(rnd() * 100).toFixed(1)}%;top:${(rnd() * 95 - 5).toFixed(1)}%;animation-delay:-${(rnd() * 10).toFixed(1)}s;background:${["#f4c3cf", "#f7cdd5", "#fde2e6"][i % 3]}"></span>`;
-    for (let i = 0; i < 6; i++) html += `<span class="fluff" style="left:${(rnd() * 100).toFixed(1)}%;top:${(rnd() * 95).toFixed(1)}%;animation-delay:-${(rnd() * 13).toFixed(1)}s"></span>`;
+    let html = washes.map(([l, t, w, h, c, o, r]) =>
+      `<div class="wash" style="left:${l}%;top:${t}%;width:${w}%;height:${h}%;border-radius:${r};background:${c};opacity:${o}"></div>`).join("");
+    if (theme === "night") {
+      html += '<div class="moon" style="left:58%;top:max(108px, 13%);width:32px;height:32px"></div>';
+      for (let i = 0; i < 26; i++) { const sz = (1.5 + rnd() * 2).toFixed(1);
+        html += `<span class="star" style="left:${(rnd() * 100).toFixed(1)}%;top:${(rnd() * 60).toFixed(1)}%;width:${sz}px;height:${sz}px;animation-delay:-${(rnd() * 4).toFixed(1)}s;animation-duration:${(3 + rnd() * 3).toFixed(1)}s"></span>`; }
+    }
+    sky.innerHTML = html + '<svg class="grain"><rect width="100%" height="100%" filter="url(#grain)"/></svg>';
+    html = "";
+    if (theme === "night") {
+      for (let i = 0; i < 12; i++) html += `<span class="firefly" style="left:${(rnd() * 100).toFixed(1)}%;top:${(30 + rnd() * 68).toFixed(1)}%;animation-delay:-${(rnd() * 11).toFixed(1)}s;animation-duration:${(9 + rnd() * 5).toFixed(1)}s"></span>`;
+    } else {
+      for (let i = 0; i < 10; i++) html += `<span class="petal" style="left:${(rnd() * 100).toFixed(1)}%;top:${(rnd() * 95 - 5).toFixed(1)}%;animation-delay:-${(rnd() * 10).toFixed(1)}s;background:${["#f4c3cf", "#f7cdd5", "#fde2e6"][i % 3]}"></span>`;
+      for (let i = 0; i < 6; i++) html += `<span class="fluff" style="left:${(rnd() * 100).toFixed(1)}%;top:${(rnd() * 95).toFixed(1)}%;animation-delay:-${(rnd() * 13).toFixed(1)}s"></span>`;
+    }
     drift.innerHTML = html;
-  })();
+  }
+  // Theme: Dawn Meadow or Night Garden, remembered in this browser
+  function setTheme(theme, save) {
+    theme = theme === "night" ? "night" : "dawn";
+    if (theme === "night") document.documentElement.dataset.theme = "night"; else delete document.documentElement.dataset.theme;
+    document.querySelectorAll("[data-theme-pick]").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.themePick === theme)));
+    const tc = document.querySelector('meta[name="theme-color"]'); if (tc) tc.content = theme === "night" ? "#17162c" : "#fbf6f1";
+    paintSky(theme);
+    if (save) store.set("ss-theme", theme);
+  }
+  document.querySelectorAll("[data-theme-pick]").forEach(b => b.onclick = () => setTheme(b.dataset.themePick, true));
+  setTheme(store.get("ss-theme", "dawn"), false);
 
   // ---------- First-time glow on the tile, timed with the harp ----------
   const SPARK = '<svg viewBox="0 0 20 20"><path d="M10 0 C11 7 13 9 20 10 C13 11 11 13 10 20 C9 13 7 11 0 10 C7 9 9 7 10 0 Z" fill="currentColor"/></svg>';
