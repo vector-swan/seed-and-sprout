@@ -226,14 +226,14 @@ button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 .tiles.dragging .tile { transition: opacity 0.13s; }
 .face { position: relative; width: 100%; height: 100%; }
 .face .wash { position: absolute; inset: 0; border-radius: 14px; background: var(--wimg) center / 100% 100% no-repeat; box-shadow: var(--tile-shadow); }
-.face.big .wash { box-shadow: var(--tile-glow), 0 0 0 3px var(--gold); }
+.face.big .wash { box-shadow: var(--tile-glow), inset 0 0 0 2px var(--gold); }
 /* Fixed layout on every card: the picture always sits in the same spot, with room kept for a two-line name below,
    so a long name never pushes the art and a merge never shifts it */
 .face .artbox { position: absolute; top: 5%; left: 50%; translate: -50% 0; height: 60%; aspect-ratio: 1; display: flex; align-items: center; justify-content: center; }
 .artbox .art { flex: none; height: auto; aspect-ratio: 1; pointer-events: none; -webkit-user-drag: none; user-select: none; }
 .face .name { position: absolute; left: 2px; right: 2px; bottom: 7%; height: 25px; display: flex; align-items: center; justify-content: center; font-size: 11.5px; font-weight: 700; color: var(--tile-ink); text-align: center; line-height: 1.05; letter-spacing: -0.01em; overflow-wrap: anywhere; }
 @media (max-width: 370px) { .face .name { font-size: 10.5px; } }
-.tile.hint .wash { box-shadow: 0 0 0 3px var(--gold), var(--tile-glow); }
+.tile.hint .wash { box-shadow: inset 0 0 0 2px var(--gold), var(--tile-glow); }
 .tile.pop .face { animation: pop 0.19s cubic-bezier(0.2, 0.8, 0.3, 1); }
 @keyframes pop { 40% { transform: scale(1.08); } }
 .tile.gone { z-index: 1; opacity: 0; }
@@ -246,7 +246,7 @@ button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 /* First time a plant is made this game: a breathing halo, a glowing outline and twinkling sparkles, timed with the harp */
 .tile.first { z-index: 3; }
 .tile .halo { will-change: transform, opacity; position: absolute; inset: -8px; border-radius: 24px; background: radial-gradient(closest-side, var(--halo) 35%, rgba(255,255,255,0)); animation: breathe 0.9s ease-in-out 1 forwards; pointer-events: none; opacity: 0; }
-.tile.first .wash { box-shadow: 0 0 0 1.5px var(--halo), 0 0 8px rgba(255,228,150,0.35); }
+.tile.first .wash { box-shadow: inset 0 0 0 1.5px var(--halo), 0 0 8px rgba(255,228,150,0.35); }
 .tile .spk { position: absolute; pointer-events: none; will-change: transform, opacity; animation: twinkle 0.7s ease-in-out 1 both; }
 @keyframes breathe { 0% { opacity: 0; transform: scale(0.96) } 40% { opacity: 0.4; transform: scale(1.01) } 100% { opacity: 0; transform: scale(1.02) } }
 @keyframes twinkle { 0%, 100% { transform: scale(0.3); opacity: 0 } 50% { transform: scale(1); opacity: 0.7 } }
@@ -936,12 +936,12 @@ button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
     const oldArt = oldFace.querySelector(".art"), oldName = oldFace.querySelector(".name");
     const art = fresh.querySelector(".art"), wash = fresh.querySelector(".wash"), name = fresh.querySelector(".name");
     // No dip: the old plant swells slightly as it fades, and the new one is there right away and pops to size
-    if (oldArt) oldArt.animate([{ opacity: 1, scale: 1 }, { opacity: 0, scale: 1.06 }], { duration: ms(90), easing: "ease-out", fill: "forwards" });
+    // A pure crossfade: nothing on the card changes size, the old plant simply gives way to the new one
+    if (oldArt) oldArt.animate([{ opacity: 1 }, { opacity: 0 }], { duration: ms(140), easing: "ease-out", fill: "forwards" });
     if (oldName) oldName.animate([{ opacity: 1 }, { opacity: 0 }], { duration: ms(80), fill: "forwards" });
     if (wash) wash.animate([{ opacity: 0 }, { opacity: 1 }], { duration: ms(110), easing: "ease-out", fill: "backwards" });
     let grow = null;
-    if (art) grow = art.animate([{ opacity: 0.2, scale: 0.86 }, { opacity: 1, scale: 1.08, offset: 0.4 }, { opacity: 1, scale: 1 }],
-      { duration: ms(240), easing: "cubic-bezier(0.2, 0.8, 0.3, 1)", fill: "backwards" });
+    if (art) grow = art.animate([{ opacity: 0 }, { opacity: 1 }], { duration: ms(200), easing: "ease-out", fill: "backwards" });
     if (name) name.animate([{ opacity: 0 }, { opacity: 1 }], { duration: ms(120), delay: ms(30), easing: "ease-out", fill: "backwards" });
     // A tiny puff of petals from the center
     if (!calm()) {
