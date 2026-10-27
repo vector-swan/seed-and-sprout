@@ -142,7 +142,7 @@ button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
   position: absolute; top: 0; left: 0;
   width: calc((100% - 3 * var(--gap)) / 4); height: calc((100% - 3 * var(--gap)) / 4);
   transform: translate(calc((var(--x) + var(--dx, 0)) * (100% + var(--gap))), calc((var(--y) + var(--dy, 0)) * (100% + var(--gap))));
-  transition: transform var(--glide, 0.16s) cubic-bezier(0.25, 0.8, 0.35, 1), opacity 0.13s;
+  transition: opacity 0.13s;
   z-index: 2;
   will-change: transform; /* keeps the watercolor art painted once, so moving a tile never repaints it */
 }
@@ -209,7 +209,6 @@ button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 .proto { font-size: 11px; color: var(--mist); margin: 0; text-align: center; }
 
 @media (prefers-reduced-motion: reduce) {
-  .tile { transition: none; }
   .tile.pop .face, .board.nudge, .petal, .fluff, .tile .halo, .tile .spk { animation: none; }
   .petal, .fluff { display: none; }
 }
@@ -715,11 +714,45 @@ button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
     if (!discovered.includes(v)) { discovered.push(v); store.set("ss-discovered", discovered); if (!S.newFinds.includes(v)) S.newFinds.push(v); }
   }
 
-  function move(dir) {
+  // ---------- Sliding tiles ----------
+  // Every slide is played by script from where a tile is drawn right now (mid-drag included) to its new spot,
+  // so it glides the same on every phone and browser. With Reduce Motion on, slides are just quicker.
+  const calm = () => window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const EASE = "cubic-bezier(0.25, 0.8, 0.35, 1)";
+  function whereTiles() {
+    const at = new Map();
+    for (const [id, el] of els) { const r = el.getBoundingClientRect(); at.set(id, [r.left, r.top]); }
+    return at;
+  }
+  function clearDragOffsets() {
+    for (const el of els.values()) { el.style.removeProperty("--dx"); el.style.removeProperty("--dy"); el.classList.remove("hint"); }
+    if (typeof shown !== "undefined") shown.clear();
+  }
+  function slideFrom(from, secs, spawn) {
+    const ms = Math.round(secs * 1000 * (calm() ? 0.6 : 1));
+    for (const [id, el] of els) {
+      if (el.slide) { el.slide.cancel(); el.slide = null; }
+      const p = from.get(id);
+      let start = null;
+      if (p) {
+        const r = el.getBoundingClientRect(), dx = p[0] - r.left, dy = p[1] - r.top;
+        if (Math.abs(dx) + Math.abs(dy) > 0.5) start = `${dx.toFixed(1)}px ${dy.toFixed(1)}px`;
+      } else if (spawn && id === spawn.id && spawn.dir) {
+        // The new tile slides in from just outside its spot, on the side the move came from
+        const [vx, vy] = VEC[spawn.dir], step = el.offsetWidth + 8;
+        start = `${(-vx * step * 0.6).toFixed(1)}px ${(-vy * step * 0.6).toFixed(1)}px`;
+      }
+      if (start && el.animate) {
+        try { el.slide = el.animate([{ translate: start }, { translate: "0px 0px" }], { duration: ms, easing: EASE }); } catch (e) {}
+      }
+    }
+  }
+  function move(dir, glide = 0.15) {
     if (S.over) return;
     const g = S.grid, moved = [], popped = [], merged = [];
     freshFind = 0;
     if (!canMove(g, dir)) { boardEl.classList.remove("nudge"); void boardEl.offsetWidth; boardEl.classList.add("nudge"); sfx.bump(); return; }
+    const from = whereTiles();
     S.history.push(snapshot()); if (S.history.length > 30) S.history.shift();
     for (const l of lines(dir)) {
       const s = lineStart(g, l);
@@ -741,6 +774,8 @@ button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
     g[l[N - 1]] = spawn;
     S.queue.push(drawValue(S));
     render({ popped, spawn: spawn.id, dir });
+    clearDragOffsets();
+    slideFrom(from, glide, { id: spawn.id, dir });
     sfx.move(merged, freshFind);
     if (freshFind) { const t = S.grid.find(t => t && t.v === freshFind && popped.includes(t.id)); if (t) setTimeout(() => celebrate(t.id, t.v), 140); }
     if (!anyMove(g)) { S.over = true; setTimeout(showOver, 260); }
@@ -959,32 +994,15 @@ button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
     if (!drag) return;
     const { dir, f, dist, t } = drag; drag = null;
     if (frame) { cancelAnimationFrame(frame); frame = 0; }
+    tilesEl.classList.remove("dragging");
     const flick = dist > 24 && performance.now() - t < 220;
-    const commit = !cancel && dir && (f >= 0.5 || flick) && canMove(S.grid, dir);
-    if (!commit) {
-      // Let go early: glide back from wherever the finger left the tiles
-      tilesEl.classList.remove("dragging"); void tilesEl.offsetWidth;
-      resetOffsets();
-      if (!cancel && dir && (f >= 0.5 || flick)) move(dir); // blocked move: just the gentle nudge
-      return;
-    }
-    // Commit: note where every tile is drawn right now, make the move with motion paused,
-    // then offset each tile so it still sits exactly there, and let it glide the rest of the way.
-    const num = (el, k) => parseFloat(el.style.getPropertyValue(k)) || 0;
-    const at = new Map();
-    for (const [id, el] of els) at.set(id, [num(el, "--x") + num(el, "--dx"), num(el, "--y") + num(el, "--dy")]);
-    shown.clear();
-    move(dir);
-    for (const [id, el] of els) {
-      const p = at.get(id); if (!p) continue;
-      el.style.setProperty("--dx", p[0] - num(el, "--x")); el.style.setProperty("--dy", p[1] - num(el, "--y"));
-    }
-    // The less of the way left to go, the shorter the glide
-    tilesEl.style.setProperty("--glide", (0.08 + 0.14 * (1 - Math.min(1, f))).toFixed(3) + "s");
-    clearTimeout(glideTimer); glideTimer = setTimeout(() => tilesEl.style.removeProperty("--glide"), 400);
-    void tilesEl.offsetWidth;
-    tilesEl.classList.remove("dragging"); void tilesEl.offsetWidth;
-    for (const el of els.values()) { el.style.removeProperty("--dx"); el.style.removeProperty("--dy"); el.classList.remove("hint"); }
+    const go = !cancel && dir && (f >= 0.5 || flick);
+    if (go && canMove(S.grid, dir)) { move(dir, 0.09 + 0.15 * (1 - Math.min(1, f))); return; }
+    // Let go early (or the move is blocked): glide back from wherever the finger left the tiles
+    const from = whereTiles();
+    clearDragOffsets();
+    slideFrom(from, 0.16);
+    if (go) move(dir); // blocked: the gentle nudge
   }
   boardEl.addEventListener("pointerup", () => endDrag(false));
   boardEl.addEventListener("pointercancel", () => endDrag(true));
