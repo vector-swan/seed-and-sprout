@@ -218,8 +218,10 @@ button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 
 .tile {
   position: absolute; top: 0; left: 0;
-  width: calc((100% - 3 * var(--gap)) / 4); height: calc((100% - 3 * var(--gap)) / 4);
-  transform: translate(calc((var(--x) + var(--dx, 0)) * (100% + var(--gap))), calc((var(--y) + var(--dy, 0)) * (100% + var(--gap))));
+  width: var(--tw, calc((100% - 3 * var(--gap)) / 4)); height: var(--th, calc((100% - 3 * var(--gap)) / 4));
+  /* --px/--py (spacing) and --ox/--oy (origin nudge) are set by script so every tile sits on whole screen pixels;
+     a tile half a pixel off gets resampled and its art looks soft */
+  transform: translate(calc((var(--x) + var(--dx, 0)) * var(--px, 100% + var(--gap)) + var(--ox, 0px)), calc((var(--y) + var(--dy, 0)) * var(--py, 100% + var(--gap)) + var(--oy, 0px)));
   transition: opacity 0.13s;
   z-index: 2;
   will-change: transform; /* keeps the watercolor art painted once, so moving a tile never repaints it */
@@ -835,13 +837,30 @@ button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
   const calm = () => window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
   const DECEL = "cubic-bezier(0, 0, 0.2, 1)";
   const GAP = () => parseFloat(cssVar("--gap")) || 8;
-  const stepX = () => (tilesEl.clientWidth - 3 * GAP()) / 4 + GAP();
-  const stepY = () => (tilesEl.clientHeight - 3 * GAP()) / 4 + GAP();
+  const stepX = () => tilesEl._px || (tilesEl.clientWidth - 3 * GAP()) / 4 + GAP();
+  const stepY = () => tilesEl._py || (tilesEl.clientHeight - 3 * GAP()) / 4 + GAP();
+  // Pixel-snap the grid: tile spacing and the grid's corner land exactly on device pixels
+  function snapGrid() {
+    const dpr = window.devicePixelRatio || 1, snap = v => Math.round(v * dpr) / dpr, g = GAP();
+    tilesEl.style.setProperty("--ox", "0px"); tilesEl.style.setProperty("--oy", "0px");
+    const r = tilesEl.getBoundingClientRect(); if (!r.width) return;
+    const tw = Math.floor((r.width - 3 * g) / 4 * dpr) / dpr, th = Math.floor((r.height - 3 * g) / 4 * dpr) / dpr;
+    const px = snap(tw + g), py = snap(th + g);
+    tilesEl._px = px; tilesEl._py = py;
+    const st = tilesEl.style;
+    st.setProperty("--tw", tw + "px"); st.setProperty("--th", th + "px");
+    st.setProperty("--px", px + "px"); st.setProperty("--py", py + "px");
+    st.setProperty("--ox", (snap(r.left) - r.left).toFixed(4) + "px"); st.setProperty("--oy", (snap(r.top) - r.top).toFixed(4) + "px");
+  }
+  snapGrid();
+  if (window.ResizeObserver) new ResizeObserver(snapGrid).observe(tilesEl);
+  window.addEventListener("resize", snapGrid);
+  window.addEventListener("scroll", () => { if (!snapGrid._q) { snapGrid._q = requestAnimationFrame(() => { snapGrid._q = 0; snapGrid(); }); } }, { passive: true });
   const cellsOf = (el, k) => parseFloat(el.style.getPropertyValue(k)) || 0;
   // A tile's extra offset (px) on top of its grid spot: used by dragging and by springs
   function setOffset(el, x, y) {
     el._ox = x; el._oy = y;
-    el.style.translate = (Math.abs(x) > 0.01 || Math.abs(y) > 0.01) ? `${x.toFixed(2)}px ${y.toFixed(2)}px` : "";
+    el.style.translate = (Math.abs(x) > 0.01 || Math.abs(y) > 0.01) ? `${x.toFixed(2)}px ${y.toFixed(2)}px` : ""; // removed entirely at rest
   }
   const springs = new Map();
   let springFrame = 0, springTime = 0;
