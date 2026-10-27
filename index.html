@@ -157,6 +157,10 @@ button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 @keyframes pop { 40% { transform: scale(1.08); } }
 .tile.gone { z-index: 1; opacity: 0; }
 .tile.under { z-index: 1; }
+/* During an upgrade the new face sits on top of the old one */
+.face.morph-in { position: absolute; inset: 0; }
+.face .puff { position: absolute; left: 50%; top: 42%; width: 0; height: 0; pointer-events: none; }
+.face .puff i { position: absolute; left: -4px; top: -3px; width: 8px; height: 6px; border-radius: 60% 40% 60% 40%; opacity: 0; }
 
 /* First time a plant is made this game: a breathing halo, a glowing outline and twinkling sparkles, timed with the harp */
 .tile.first { z-index: 3; }
@@ -777,6 +781,42 @@ button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
     if (el.animate) { const a = el.animate([{ opacity: 1 }, { opacity: 0 }], { duration: MOTION.fadeMs, easing: "ease-out", fill: "forwards" }); a.onfinish = done; }
     else done();
   }
+  // Upgrade: the old plant shrinks and fades as the new one grows in its place, the tile color blends across,
+  // and a few tiny petals puff out. The new face takes over at once, so a quick next move never trips on it.
+  const BLOOM = ["#f4c3cf", "#fde2e6", "#f7d9a8", "#d8c8ef", "#cfe3c0", "#f4c3cf"];
+  function morph(tileEl, v) {
+    const oldFace = tileEl._face;
+    const fresh = document.createElement("div");
+    face(fresh, v);
+    fresh.classList.add("morph-in");
+    tileEl.appendChild(fresh);
+    tileEl._face = fresh;
+    if (!fresh.animate) { oldFace.remove(); fresh.classList.remove("morph-in"); return; }
+    const k = calm() ? 0.6 : 1, ms = x => Math.round(x * k);
+    const oldArt = oldFace.querySelector(".art"), oldName = oldFace.querySelector(".name");
+    const art = fresh.querySelector(".art"), wash = fresh.querySelector(".wash"), name = fresh.querySelector(".name");
+    if (oldArt) oldArt.animate([{ opacity: 1, scale: 1 }, { opacity: 0, scale: 0.55 }], { duration: ms(200), easing: "cubic-bezier(0.4, 0, 1, 1)", fill: "forwards" });
+    if (oldName) oldName.animate([{ opacity: 1 }, { opacity: 0 }], { duration: ms(140), fill: "forwards" });
+    if (wash) wash.animate([{ opacity: 0 }, { opacity: 1 }], { duration: ms(240), easing: "ease-out", fill: "backwards" });
+    let grow = null;
+    if (art) grow = art.animate([{ opacity: 0, scale: 0.5 }, { opacity: 1, scale: 1.09, offset: 0.62 }, { opacity: 1, scale: 1 }],
+      { duration: ms(380), delay: ms(90), easing: "cubic-bezier(0.2, 0.8, 0.3, 1)", fill: "backwards" });
+    if (name) name.animate([{ opacity: 0, translate: "0 3px" }, { opacity: 1, translate: "0 0" }], { duration: ms(220), delay: ms(200), easing: "ease-out", fill: "backwards" });
+    // A tiny puff of petals from the center
+    if (!calm()) {
+      const puff = document.createElement("div"); puff.className = "puff"; puff.setAttribute("aria-hidden", "true");
+      fresh.insertBefore(puff, art || null);
+      BLOOM.forEach((c, i) => {
+        const p = document.createElement("i"), ang = (i / BLOOM.length) * Math.PI * 2 + Math.random() * 0.5, r = 22 + Math.random() * 10;
+        p.style.background = c; puff.appendChild(p);
+        p.animate([{ opacity: 0, translate: "0 0", scale: 0.4 }, { opacity: 0.95, offset: 0.25 }, { opacity: 0, translate: `${(Math.cos(ang) * r).toFixed(1)}px ${(Math.sin(ang) * r).toFixed(1)}px`, scale: 1 }],
+          { duration: 520, delay: 70 + i * 12, easing: "cubic-bezier(0.1, 0.7, 0.3, 1)", fill: "both" });
+      });
+      setTimeout(() => puff.remove(), 760);
+    }
+    const finish = () => { oldFace.remove(); fresh.classList.remove("morph-in"); };
+    if (grow && grow.finished) grow.finished.then(finish, finish); else setTimeout(finish, ms(470));
+  }
   function move(dir, vel = { vx: 0, vy: 0 }) {
     if (S.over) return;
     const g = S.grid, moved = [], popped = [], merged = [], pairs = new Map();
@@ -820,8 +860,7 @@ button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
         dropUnder(pairs.get(id));
         const t = S.grid.find(t => t && t.id === id), e = els.get(id);
         if (!t || !e) return;
-        if (e.dataset.v != t.v) { face(e._face, t.v); e.dataset.v = t.v; }
-        e.classList.remove("pop"); void e.offsetWidth; e.classList.add("pop");
+        if (e.dataset.v != t.v) { morph(e, t.v); e.dataset.v = t.v; }
         if (freshFind && t.v === freshFind && !celebrated) { celebrated = true; sfx.first(t.v); celebrate(id, t.v); }
       } : null;
       if (Math.abs(ox) + Math.abs(oy) < 0.5) { setOffset(el, 0, 0); if (arrive) arrive(); continue; }
