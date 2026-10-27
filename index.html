@@ -1049,7 +1049,7 @@ button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
   document.addEventListener("keydown", e => { const d = KEYS[e.key]; if (!d || !overlay.hidden || !panel.hidden || e.target.closest("input, .sndpanel")) return; e.preventDefault(); move(d); });
 
   // ---------- Dragging ----------
-  // Tiles follow your finger; past one space they resist like a rubber band. In a blocked direction
+  // Tiles follow your finger and stop firmly once they reach the next space. In a blocked direction
   // everything gives a little and springs back. On release, the flick decides: forward commits, back cancels;
   // a slow release goes by where the tiles would come to rest.
   const VEC = { left: [-1, 0], right: [1, 0], up: [0, -1], down: [0, 1] };
@@ -1060,7 +1060,7 @@ button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
     const g = S.grid, dir = drag.dir, [vx, vy] = VEC[dir], step = vx ? stepX() : stepY(), d = drag.d;
     const want = new Map();
     if (canMove(g, dir)) {
-      const off = d <= step ? d : step + rubber(d - step, step * 0.5);
+      const off = Math.min(d, step); // stop dead where the tile meets the next one
       for (const l of lines(dir)) {
         const s = lineStart(g, l); if (s < 0) continue;
         for (let j = s; j < N; j++) { const t = g[l[j]]; if (t) want.set(t.id, { o: off }); }
