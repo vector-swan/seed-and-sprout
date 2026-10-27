@@ -118,10 +118,6 @@ body {
 @keyframes floaty { 0% { transform: translate(0, 0); opacity: 0 } 20% { opacity: 0.9 } 100% { transform: translate(40px, -80px); opacity: 0 } }
 [data-theme="night"] .link .dot { box-shadow: 0 0 12px rgba(190,180,255,0.16), inset 0 0 0 1px rgba(210,200,255,0.14); }
 /* Moonlit plants: a touch cooler and softer, with a faint glow so they lift off the dark paper */
-/* (No filter on the art itself: phones redraw filtered images blurry. The glow is a soft light painted behind instead.) */
-[data-theme="night"] .face .artbox::before, [data-theme="night"] .mini .artbox::before, [data-theme="night"] .link .dot .artbox::before {
-  content: ""; position: absolute; inset: 8%; border-radius: 50%; pointer-events: none;
-  background: radial-gradient(closest-side, rgba(235,228,255,0.13), rgba(235,228,255,0.05) 65%, rgba(235,228,255,0)); }
 .mini .artbox, .link .dot .artbox { position: relative; }
 .artbox .art { position: relative; }
 [data-theme="night"] .loghead { border-bottom-color: rgba(242,160,180,0.3); }
