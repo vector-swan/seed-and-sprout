@@ -1224,21 +1224,23 @@ button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
   boardEl.addEventListener("pointerdown", e => {
     if (S.over || !overlay.hidden || e.target.closest("button")) return;
     settleAll();
-    drag = { x: e.clientX, y: e.clientY, dir: null, d: 0, samples: [[performance.now(), 0]] };
+    drag = { x: e.clientX, y: e.clientY, axis: null, dir: null, d: 0, samples: [[performance.now(), 0]] };
     try { boardEl.setPointerCapture(e.pointerId); } catch (err) {}
   });
   boardEl.addEventListener("pointermove", e => {
     if (!drag) return;
     const dx = e.clientX - drag.x, dy = e.clientY - drag.y;
-    if (!drag.dir && Math.max(Math.abs(dx), Math.abs(dy)) < 6) return;
-    const dir = Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? "right" : "left") : (dy > 0 ? "down" : "up");
-    if (drag.dir && drag.dir !== dir) {
-      // Changed direction: if it's a reversal along the same axis, keep tracking signed distance; else restart
-      const sameAxis = (VEC[dir][0] !== 0) === (VEC[drag.dir][0] !== 0);
-      if (!sameAxis || Math.max(Math.abs(dx), Math.abs(dy)) > 6) { drag.samples = [[performance.now(), 0]]; }
+    // Lock to one axis, like a swipe in Google Calendar: the first 8px decide side-to-side or up-and-down,
+    // and after that the tiles follow the finger along that axis only. Drift the other way is ignored.
+    if (!drag.axis) {
+      if (Math.max(Math.abs(dx), Math.abs(dy)) < 8) return;
+      drag.axis = Math.abs(dx) >= Math.abs(dy) ? "x" : "y";
     }
+    const along = drag.axis === "x" ? dx : dy;
+    const dir = drag.axis === "x" ? (along >= 0 ? "right" : "left") : (along >= 0 ? "down" : "up");
+    if (drag.dir && drag.dir !== dir) drag.samples = [[performance.now(), 0]];   // pulled back past the start: now the opposite way
     drag.dir = dir;
-    drag.d = Math.max(Math.abs(dx), Math.abs(dy));
+    drag.d = Math.abs(along);
     drag.samples.push([performance.now(), drag.d]); if (drag.samples.length > 12) drag.samples.shift();
     schedule();
   });
