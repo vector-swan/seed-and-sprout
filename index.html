@@ -113,7 +113,7 @@ button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 /* Labels share one top row; the next tile, score and best sit right under them */
 .next { display: flex; align-items: center; gap: 10px; }
 .mini { width: 52px; height: 44px; border-radius: 12px; display: flex; align-items: center; justify-content: center; box-shadow: var(--ring); }
-.mini svg { width: 44px; height: 44px; }
+.mini .art { width: 44px; height: 44px; pointer-events: none; }
 .scores { display: flex; justify-content: center; align-items: flex-start; gap: 12px; min-width: 0; }
 .stat { display: flex; flex-direction: column; align-items: center; gap: 5px; min-width: 0; }
 .lbl { line-height: 1.2; }
@@ -148,9 +148,9 @@ button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 }
 .tiles.dragging .tile { transition: opacity 0.13s; }
 .face { position: relative; width: 100%; height: 100%; box-sizing: border-box; padding-bottom: 12px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; }
-.face .wash { position: absolute; inset: 0; border-radius: 14px; background: var(--w, var(--tile-wash)); box-shadow: var(--tile-glow); filter: url(#edge); }
+.face .wash { position: absolute; inset: 0; border-radius: 14px; background: var(--wimg) center / 100% 100% no-repeat; box-shadow: 0 0 12px rgba(255,255,255,0.85), 0 3px 7px rgba(120,100,140,0.10); }
 .face.big .wash { box-shadow: var(--tile-glow), 0 0 0 3px var(--gold); }
-.face svg { position: relative; width: 92%; height: auto; max-height: 74%; }
+.face .art { position: relative; width: 92%; height: auto; max-height: 74%; aspect-ratio: 1; object-fit: contain; pointer-events: none; -webkit-user-drag: none; user-select: none; }
 .face .name { position: relative; font-size: 9px; font-weight: 800; color: var(--ink); text-align: center; line-height: 1.1; padding: 0 3px; white-space: nowrap; letter-spacing: -0.01em; }
 .tile.hint .wash { box-shadow: 0 0 0 3px var(--gold), var(--tile-glow); }
 .tile.pop .face { animation: pop 0.2s ease-out; }
@@ -159,9 +159,9 @@ button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 
 /* First time a plant is made this game: a breathing halo, a glowing outline and twinkling sparkles, timed with the harp */
 .tile.first { z-index: 3; }
-.tile .halo { position: absolute; inset: -26px; border-radius: 40px; background: radial-gradient(closest-side, var(--halo) 35%, rgba(255,255,255,0)); animation: breathe 1.6s ease-in-out 2; pointer-events: none; }
+.tile .halo { will-change: transform, opacity; position: absolute; inset: -26px; border-radius: 40px; background: radial-gradient(closest-side, var(--halo) 35%, rgba(255,255,255,0)); animation: breathe 1.6s ease-in-out 2; pointer-events: none; }
 .tile.first .wash { box-shadow: 0 0 0 2px var(--halo), 0 0 22px var(--halo); }
-.tile .spk { position: absolute; pointer-events: none; animation: twinkle 1.2s ease-in-out 3; }
+.tile .spk { position: absolute; pointer-events: none; will-change: transform, opacity; animation: twinkle 1.2s ease-in-out 3; }
 @keyframes breathe { 0%, 100% { opacity: 0.55; transform: scale(0.95) } 50% { opacity: 1; transform: scale(1.04) } }
 @keyframes twinkle { 0%, 100% { transform: scale(0.3); opacity: 0 } 50% { transform: scale(1); opacity: 1 } }
 .toast {
@@ -201,7 +201,7 @@ button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 .chain { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); grid-auto-flow: column; column-gap: 10px; }
 .link { display: flex; align-items: center; gap: 10px; min-width: 0; padding: 8px 0; }
 .link .dot { width: 54px; height: 54px; flex: none; border-radius: 50%; overflow: hidden; background: var(--cream); box-shadow: 0 0 10px rgba(255,255,255,0.9), inset 0 0 0 1px rgba(122,106,166,0.16); display: flex; align-items: center; justify-content: center; }
-.link .dot svg { width: 54px; height: 54px; }
+.link .dot .art { width: 54px; height: 54px; }
 .link b { display: block; font-family: var(--font-display); font-weight: 600; font-size: 15px; line-height: 1.15; color: var(--ink); overflow-wrap: anywhere; }
 .link small { display: block; font-size: 11px; line-height: 1.3; color: var(--mist); }
 .link > div:last-child { min-width: 0; }
@@ -312,9 +312,32 @@ button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
     box.remove();
     return (bounds[v] = b && b.width ? { cx: b.x + b.width / 2, cy: b.y + b.height / 2, m: Math.max(b.width, b.height) } : { cx: 32, cy: 40, m: 44 });
   }
-  function svgFit(v, fill) {
-    const { cx, cy, m } = measure(v), side = m / fill;
-    return `<svg viewBox="${(cx - side / 2).toFixed(2)} ${(cy - side / 2).toFixed(2)} ${side.toFixed(2)} ${side.toFixed(2)}" aria-hidden="true" style="overflow: visible"><g filter="url(#wcx)">${ART[plant(v)[0]]}</g></svg>`;
+  // Each plant is painted once into a picture (watercolor effect baked in), so the phone never has to
+  // recalculate the effect while tiles slide, pop or light up.
+  const pics = {};
+  const defsOf = id => { const f = document.getElementById(id); return f ? f.outerHTML : ""; };
+  const asPic = svgText => "data:image/svg+xml;charset=utf-8," + encodeURIComponent(svgText);
+  function picFit(v, fill) {
+    const key = v + "@" + fill;
+    if (!pics[key]) {
+      const { cx, cy, m } = measure(v), side = m / fill;
+      const vb = `${(cx - side / 2).toFixed(2)} ${(cy - side / 2).toFixed(2)} ${side.toFixed(2)} ${side.toFixed(2)}`;
+      pics[key] = asPic(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="${vb}" width="256" height="256"><defs>${defsOf("wcx")}</defs><g filter="url(#wcx)">${ART[plant(v)[0]]}</g></svg>`);
+    }
+    return pics[key];
+  }
+  const svgFit = (v, fill) => `<img class="art" src="${picFit(v, fill)}" alt="" aria-hidden="true" draggable="false" decoding="async">`;
+  // The soft, slightly wobbly watercolor tile background, also painted once per color
+  const washPics = {};
+  function washPic(color) {
+    if (!washPics[color]) washPics[color] = `url("${asPic(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 98" preserveAspectRatio="none"><defs>${defsOf("edge")}</defs><rect x="2" y="2" width="76" height="94" rx="13" fill="${color}" filter="url(#edge)"/></svg>`)}")`;
+    return washPics[color];
+  }
+  const cssVar = name => getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+  // Paint every picture up front so a new plant never appears blank for a moment
+  function warmPictures() {
+    for (const v of CHAIN) for (const f of [v <= 2 ? 0.62 : 0.8, 0.5, 0.58]) { const im = new Image(); im.src = picFit(v, f); }
+    for (const c of ["--seed-wash", "--water-wash", "--tile-wash"]) washPic(cssVar(c));
   }
   // How each plant is grown, written like a journal note
   const PLURAL = { 3: 'Sprouts', 6: 'Forget-me-nots', 12: 'Violets', 24: 'Daisies', 48: 'Tulips', 96: 'Poppies', 192: 'Roses', 384: 'Hydrangeas', 768: 'Sunflowers', 1536: 'Bouquets' };
@@ -601,10 +624,20 @@ button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
       M.st.pads.forEach(p => { p.g.gain.cancelScheduledValues(t); p.g.gain.setValueAtTime(Math.max(p.g.gain.value, 0.001), t); p.g.gain.exponentialRampToValueAtTime(0.0001, t + 1.8); });
       M.st.chord = 0; M.st.step = 0; M.next = t + 0.3;
     }
-    document.addEventListener("visibilitychange", () => {
-      if (!ctx) return;
-      if (document.hidden) ctx.suspend(); else if (on || musicOn) { ctx.resume(); musicStart(); }
-    });
+    let pauseTimer = 0;
+    function pauseAudio() {
+      if (!ctx || ctx.state !== "running") return;
+      const t = ctx.currentTime; master.gain.cancelScheduledValues(t); master.gain.setValueAtTime(master.gain.value, t); master.gain.linearRampToValueAtTime(0, t + 0.12);
+      clearTimeout(pauseTimer); pauseTimer = setTimeout(() => { if (document.hidden) ctx.suspend(); }, 160);
+    }
+    function resumeAudio() {
+      if (!ctx || !(on || musicOn)) return;
+      clearTimeout(pauseTimer);
+      const p = ctx.state === "suspended" ? ctx.resume() : Promise.resolve();
+      p.then(() => { const t = ctx.currentTime; master.gain.cancelScheduledValues(t); master.gain.setValueAtTime(master.gain.value, t); master.gain.linearRampToValueAtTime(0.7, t + 0.25); musicStart(); });
+    }
+    document.addEventListener("visibilitychange", () => { if (document.hidden) pauseAudio(); else resumeAudio(); });
+    window.addEventListener("pagehide", pauseAudio);
     return {
       get on() { return on; },
       get musicOn() { return musicOn; },
@@ -737,6 +770,7 @@ button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
   function face(el, v) {
     el.className = "face" + (v >= 1536 ? " big" : "");
     el.style.setProperty("--w", wash(v));
+    el.style.setProperty("--wimg", washPic(cssVar(v === 1 ? "--seed-wash" : v === 2 ? "--water-wash" : "--tile-wash")));
     // Every plant is framed to the same size on its tile, so small flowers are as easy to see as big ones
     el.innerHTML = `<div class="wash"></div>${svgFit(v, v <= 2 ? 0.62 : 0.8)}<span class="name">${plant(v)[1]}</span>`;
   }
@@ -994,6 +1028,7 @@ button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
   }
 
   function boot(data) {
+    try { warmPictures(); } catch (e) {}
     if (data && data.S && data.S.grid && "biggest" in data.S) {
       S = data.S; S.firsts = S.firsts || []; nextId = data.nextId || 1000; shownScore = 0; fullRender(); if (S.over) showOver();
     } else newGame();
