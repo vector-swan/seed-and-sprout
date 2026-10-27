@@ -104,19 +104,20 @@ button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
   background: var(--accent); color: #fff; font-size: 10px; font-weight: 800; line-height: 16px; text-align: center;
 }
 
+/* Top row: just what's next and Undo, no panel, so the board stays the focus */
 .strip {
-  display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 10px; align-items: start;
-  padding: 10px 12px 12px; border-radius: 18px; background: rgba(255, 255, 255, 0.5); border: 1px solid rgba(255, 255, 255, 0.8);
+  display: flex; justify-content: space-between; align-items: center; gap: 10px;
+  padding: 0 2px;
 }
 .lbl { font-size: 12px; letter-spacing: 0.02em; font-weight: 800; color: var(--label); }
 /* Labels share one top row; the next tile, score and best sit right under them */
-.next { display: flex; flex-direction: column; align-items: center; gap: 5px; }
+.next { display: flex; align-items: center; gap: 10px; }
 .mini { width: 52px; height: 44px; border-radius: 12px; display: flex; align-items: center; justify-content: center; box-shadow: var(--ring); }
 .mini svg { width: 44px; height: 44px; }
 .scores { display: flex; justify-content: center; align-items: flex-start; gap: 12px; min-width: 0; }
 .stat { display: flex; flex-direction: column; align-items: center; gap: 5px; min-width: 0; }
 .lbl { line-height: 1.2; }
-.strip > #undo { align-self: end; }
+.strip > #undo { align-self: center; }
 /* Score and Best: matching boxes, the same height as the Next box */
 .stat .num { min-width: 72px; height: 44px; box-sizing: border-box; padding: 0 12px; border-radius: 12px; background: var(--cream); box-shadow: var(--ring);
   display: flex; align-items: center; justify-content: center; font-size: 26px; font-weight: 800; line-height: 1; color: var(--ink); font-variant-numeric: tabular-nums; white-space: nowrap; }
@@ -257,7 +258,7 @@ button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
       <span class="lbl">Next</span>
       <div class="mini" id="next1"></div>
     </div>
-    <div class="scores">
+    <div class="scores" hidden>
       <div class="stat"><span class="lbl">Score</span><span class="num" id="score">0</span></div>
       <div class="stat" id="bestWrap"><span class="lbl">Best</span><span class="num" id="best">0</span></div>
     </div>
