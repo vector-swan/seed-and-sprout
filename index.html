@@ -1312,8 +1312,7 @@ button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
     el.insertAdjacentHTML("afterbegin", '<span class="halo"></span>');
     el.insertAdjacentHTML("beforeend", bits);
     setTimeout(() => { el.classList.remove("first"); el.querySelectorAll(".halo, .spk").forEach(n => n.remove()); }, 1100);
-    const t = $("toast"); t.textContent = `First ${plant(v)[1]} This Game`; t.classList.add("show");
-    clearTimeout(toastTimer); toastTimer = setTimeout(() => t.classList.remove("show"), 2600);
+    // No "First … This Game" message: the glow and harp are enough
   }
 
   function boot(data) {
