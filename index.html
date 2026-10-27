@@ -759,7 +759,8 @@ button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
     // Carry the finger's speed, but never so much that a tile shoots past its spot
     const w = 2 * Math.PI / (MOTION.response * (calm() ? 0.7 : 1));
     const cap = (v, d) => (v * -d > 0 ? Math.sign(v) * Math.min(Math.abs(v), w * Math.abs(d) * 1.1) : v * 0.5);
-    springs.set(el, { x, y, vx: cap(vx, x), vy: cap(vy, y), onArrive, arrived: false });
+    // A merge starts blooming as the tiles close in (about halfway), so the slide flows straight into it
+    springs.set(el, { x, y, vx: cap(vx, x), vy: cap(vy, y), onArrive, arrived: false, arriveAt: Math.max(MOTION.arrive, Math.hypot(x, y) * 0.5) });
     setOffset(el, x, y);
     if (!springFrame) { springTime = performance.now(); springFrame = requestAnimationFrame(stepSprings); }
   }
@@ -770,7 +771,7 @@ button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
     for (const [el, s] of springs) {
       for (let i = 0; i < n; i++) { s.vx += (-k * s.x - c * s.vx) * h; s.vy += (-k * s.y - c * s.vy) * h; s.x += s.vx * h; s.y += s.vy * h; }
       const dist = Math.hypot(s.x, s.y);
-      if (!s.arrived && dist < MOTION.arrive) { s.arrived = true; if (s.onArrive) s.onArrive(); }
+      if (!s.arrived && dist < s.arriveAt) { s.arrived = true; if (s.onArrive) s.onArrive(); }
       if (dist < 0.3 && Math.hypot(s.vx, s.vy) < 10) { setOffset(el, 0, 0); springs.delete(el); }
       else setOffset(el, s.x, s.y);
     }
@@ -804,13 +805,13 @@ button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
     const k = calm() ? 0.6 : 1, ms = x => Math.round(x * k);
     const oldArt = oldFace.querySelector(".art"), oldName = oldFace.querySelector(".name");
     const art = fresh.querySelector(".art"), wash = fresh.querySelector(".wash"), name = fresh.querySelector(".name");
-    if (oldArt) oldArt.animate([{ opacity: 1, scale: 1 }, { opacity: 0, scale: 0.55 }], { duration: ms(200), easing: "cubic-bezier(0.4, 0, 1, 1)", fill: "forwards" });
-    if (oldName) oldName.animate([{ opacity: 1 }, { opacity: 0 }], { duration: ms(140), fill: "forwards" });
-    if (wash) wash.animate([{ opacity: 0 }, { opacity: 1 }], { duration: ms(240), easing: "ease-out", fill: "backwards" });
+    if (oldArt) oldArt.animate([{ opacity: 1, scale: 1 }, { opacity: 0, scale: 0.6 }], { duration: ms(150), easing: "cubic-bezier(0.4, 0, 1, 1)", fill: "forwards" });
+    if (oldName) oldName.animate([{ opacity: 1 }, { opacity: 0 }], { duration: ms(110), fill: "forwards" });
+    if (wash) wash.animate([{ opacity: 0 }, { opacity: 1 }], { duration: ms(180), easing: "ease-out", fill: "backwards" });
     let grow = null;
     if (art) grow = art.animate([{ opacity: 0, scale: 0.5 }, { opacity: 1, scale: 1.09, offset: 0.62 }, { opacity: 1, scale: 1 }],
-      { duration: ms(380), delay: ms(90), easing: "cubic-bezier(0.2, 0.8, 0.3, 1)", fill: "backwards" });
-    if (name) name.animate([{ opacity: 0, translate: "0 3px" }, { opacity: 1, translate: "0 0" }], { duration: ms(220), delay: ms(200), easing: "ease-out", fill: "backwards" });
+      { duration: ms(320), easing: "cubic-bezier(0.2, 0.8, 0.3, 1)", fill: "backwards" });
+    if (name) name.animate([{ opacity: 0, translate: "0 3px" }, { opacity: 1, translate: "0 0" }], { duration: ms(200), delay: ms(110), easing: "ease-out", fill: "backwards" });
     // A tiny puff of petals from the center
     if (!calm()) {
       const puff = document.createElement("div"); puff.className = "puff"; puff.setAttribute("aria-hidden", "true");
@@ -819,7 +820,7 @@ button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
         const p = document.createElement("i"), ang = (i / BLOOM.length) * Math.PI * 2 + Math.random() * 0.5, r = 22 + Math.random() * 10;
         p.style.background = c; puff.appendChild(p);
         p.animate([{ opacity: 0, translate: "0 0", scale: 0.4 }, { opacity: 0.95, offset: 0.25 }, { opacity: 0, translate: `${(Math.cos(ang) * r).toFixed(1)}px ${(Math.sin(ang) * r).toFixed(1)}px`, scale: 1 }],
-          { duration: 520, delay: 70 + i * 12, easing: "cubic-bezier(0.1, 0.7, 0.3, 1)", fill: "both" });
+          { duration: 480, delay: 30 + i * 10, easing: "cubic-bezier(0.1, 0.7, 0.3, 1)", fill: "both" });
       });
       setTimeout(() => puff.remove(), 760);
     }
