@@ -980,17 +980,15 @@ button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
     tileEl.appendChild(fresh); tileEl._face = fresh;
     if (!fresh.animate || calm()) { old.remove(); return; }
     fresh.classList.add("morph-in");
-    // The new plant grows up out of its soil: a soft circle opens from the base of the picture upward,
-    // while the old plant fades. The card itself never moves or changes size.
+    // A soft crossfade: the old plant gives way as the new one appears, overlapping, with gentle easing.
+    // Opacity only; the card never moves or changes size.
     const wash = fresh.querySelector(".wash"), art = fresh.querySelector(".artbox"), name = fresh.querySelector(".name");
-    const a = wash.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 240, easing: "ease-in-out", fill: "backwards" });
-    const grow = art.animate([
-      { clipPath: "circle(0% at 50% 96%)", opacity: 0.4 },
-      { clipPath: "circle(38% at 50% 96%)", opacity: 1, offset: 0.35 },
-      { clipPath: "circle(110% at 50% 96%)", opacity: 1 }], { duration: 380, easing: "cubic-bezier(0.25, 0.8, 0.3, 1)", fill: "backwards" });
-    name.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 200, delay: 140, easing: "ease-out", fill: "backwards" });
-    old.querySelectorAll(".artbox").forEach(n => n.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 260, easing: "ease-in", fill: "forwards" }));
-    old.querySelectorAll(".name").forEach(n => n.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 140, easing: "ease-in", fill: "forwards" }));
+    const soft = "cubic-bezier(0.45, 0, 0.55, 1)";
+    const a = wash.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 300, easing: soft, fill: "backwards" });
+    const grow = art.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 320, delay: 40, easing: soft, fill: "backwards" });
+    name.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 260, delay: 80, easing: soft, fill: "backwards" });
+    old.querySelectorAll(".artbox").forEach(n => n.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 280, easing: soft, fill: "forwards" }));
+    old.querySelectorAll(".name").forEach(n => n.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 200, easing: soft, fill: "forwards" }));
     fresh.style.opacity = "1";
     const done = () => { old.remove(); fresh.classList.remove("morph-in"); };
     Promise.all([a.finished, grow.finished]).then(done, done);
