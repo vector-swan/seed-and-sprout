@@ -97,7 +97,8 @@
 [hidden] { display: none !important; }
 html, body { min-height: 100%; }
 /* No text selection, magnifier or long-press menu anywhere in the game (iPhone needs the -webkit- forms) */
-body { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
+*, *::before, *::after { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
+body { touch-action: manipulation; }   /* no double-tap zoom or double-tap word selection */
 img { -webkit-user-drag: none; -webkit-touch-callout: none; }
 input, textarea { -webkit-user-select: text; user-select: text; }
 body { margin: 0; }
@@ -1311,9 +1312,12 @@ button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
     const first = s[Math.max(0, i - 1)], dt = (last[0] - first[0]) / 1000;
     return dt > 0.008 ? (last[1] - first[1]) / dt : 0;
   }
-  // a long press on a card should never open a menu
-  boardEl.addEventListener("contextmenu", e => e.preventDefault());
-  boardEl.addEventListener("selectstart", e => e.preventDefault());
+  // A long press or double tap should never select text or open a menu, in any browser.
+  // If a browser selects something anyway (Firefox on iPhone can), clear it at once so its menu has nothing to offer.
+  document.addEventListener("contextmenu", e => e.preventDefault());
+  document.addEventListener("selectstart", e => { if (!e.target.closest || !e.target.closest("input, textarea")) e.preventDefault(); });
+  document.addEventListener("selectionchange", () => { const sel = window.getSelection && getSelection(); if (sel && !sel.isCollapsed && !(document.activeElement && document.activeElement.matches("input, textarea"))) sel.removeAllRanges(); });
+  document.addEventListener("dblclick", e => e.preventDefault());
   boardEl.addEventListener("pointerdown", e => {
     if (S.over || !overlay.hidden || e.target.closest("button")) return;
     settleAll();
