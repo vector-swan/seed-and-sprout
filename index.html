@@ -214,7 +214,7 @@ button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 .board {
   position: relative; width: 100%; aspect-ratio: 5 / 6; max-width: 100%; touch-action: none; user-select: none;
 }
-.board .bg { position: absolute; inset: -9.31% -11.17%; background: var(--bed-img) center / 100% 100% no-repeat; }   /* pre-painted bed, edge and shadow */
+.board .bg { pointer-events: none; position: absolute; inset: -9.31% -11.17%; background: var(--bed-img) center / 100% 100% no-repeat; }   /* pre-painted bed, edge and shadow */
 .board.nudge { animation: nudge 0.22s; }
 @keyframes nudge { 30% { transform: translateX(-4px); } 70% { transform: translateX(4px); } }
 .slots, .tiles { position: absolute; inset: 12px; }
@@ -357,7 +357,7 @@ button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
         <span class="sndhint">Soft Harp and Air That Grows With Your Garden</span>
       </div>
       <h3>How to Play</h3>
-      <p class="ver" id="ver">Version 28 Oct · 3</p>
+      <p class="ver" id="ver">Version 28 Oct · 4</p>
       <p class="howto">Swipe to slide every tile one space. A Seed and a Water that meet grow a Sprout; two matching plants grow the next flower. Each swipe plants the tile shown under Next. When no tile can move, the garden is full. Undo is always free.</p>
     </div>
   </div>
@@ -1323,8 +1323,10 @@ button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
   document.addEventListener("dblclick", e => e.preventDefault());
   // On the board, claim the touch outright: iPhone browsers then never start their long-press or text gestures.
   // (Pointer events, which the game uses for dragging, still arrive.)
-  boardEl.addEventListener("touchstart", e => { if (e.cancelable) e.preventDefault(); }, { passive: false });
-  boardEl.addEventListener("touchmove", e => { if (e.cancelable) e.preventDefault(); }, { passive: false });
+  // Only touches meant for the tiles: buttons and the pop-ups over the board keep their normal taps.
+  const tileTouch = e => !(e.target.closest && e.target.closest("button, a, input, .overlay"));
+  boardEl.addEventListener("touchstart", e => { if (e.cancelable && tileTouch(e)) e.preventDefault(); }, { passive: false });
+  boardEl.addEventListener("touchmove", e => { if (e.cancelable && tileTouch(e)) e.preventDefault(); }, { passive: false });
   boardEl.addEventListener("pointerdown", e => {
     if (S.over || !overlay.hidden || e.target.closest("button")) return;
     settleAll();
