@@ -1253,9 +1253,23 @@ button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
   const VEC = { left: [-1, 0], right: [1, 0], up: [0, -1], down: [0, 1] };
   let drag = null, frame = 0;
   const rubber = (o, dim) => (o * dim * 0.55) / (dim + 0.55 * Math.abs(o));
+  // One-euro filter: smooths the finger's position so uneven touch reports don't make tiles jitter,
+  // while adapting to speed so a quick swipe still tracks the finger closely
+  function smoothed(dd) {
+    const now = performance.now();
+    // When the direction first locks (after 8px), start from where the tiles are (0) and catch up over a few frames
+    if (dd.fd == null || dd.fdir !== dd.dir) { dd.fd = 0; dd.ft = now - 16; dd.fv = 0; dd.fdir = dd.dir; }
+    const dt = Math.max(0.001, (now - dd.ft) / 1000); dd.ft = now;
+    const a = c => 1 / (1 + 1 / (2 * Math.PI * c * dt));
+    const v = (dd.d - dd.fd) / dt; dd.fv += a(8) * (v - dd.fv);
+    dd.fd += a(5 + 0.03 * Math.abs(dd.fv)) * (dd.d - dd.fd);
+    if (Math.abs(dd.d - dd.fd) < 0.05) dd.fd = dd.d;
+    return dd.fd;
+  }
   function preview() {
     if (!drag || !drag.dir) return;
-    const g = S.grid, dir = drag.dir, [vx, vy] = VEC[dir], step = vx ? stepX() : stepY(), d = drag.d;
+    const g = S.grid, dir = drag.dir, [vx, vy] = VEC[dir], step = vx ? stepX() : stepY(), d = smoothed(drag);
+    if (d !== drag.d) schedule();   // keep easing toward the finger after it stops
     const want = new Map();
     if (canMove(g, dir)) {
       // Follow the finger at first, then ease off so tiles only lean toward their next space and stay in the grid
