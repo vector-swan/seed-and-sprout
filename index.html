@@ -974,17 +974,26 @@ button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
   // A merge: the new plant fades in over the old one. Opacity only; nothing moves or changes size.
   function fadeTo(tileEl, v) {
     const old = tileEl._face;
-    tileEl.querySelectorAll(".face.morph-in").forEach(f => f.getAnimations().forEach(a => a.finish()));
+    tileEl.querySelectorAll(".face.morph-in, .face.morph-in *").forEach(f => f.getAnimations().forEach(a => a.finish()));
     const fresh = document.createElement("div");
     face(fresh, v);
     tileEl.appendChild(fresh); tileEl._face = fresh;
     if (!fresh.animate || calm()) { old.remove(); return; }
     fresh.classList.add("morph-in");
-    const a = fresh.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 220, easing: "ease-in-out" });
-    // the old plant and its name fade out together, while its card stays put underneath so the paper never thins
-    old.querySelectorAll(".artbox, .name").forEach(n => n.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 220, easing: "ease-in-out", fill: "forwards" }));
-    a.finished.then(() => { old.remove(); fresh.classList.remove("morph-in"); }, () => {});
-    a.oncancel = () => { old.remove(); fresh.classList.remove("morph-in"); };
+    // The new plant grows up out of its soil: a soft circle opens from the base of the picture upward,
+    // while the old plant fades. The card itself never moves or changes size.
+    const wash = fresh.querySelector(".wash"), art = fresh.querySelector(".artbox"), name = fresh.querySelector(".name");
+    const a = wash.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 240, easing: "ease-in-out", fill: "backwards" });
+    const grow = art.animate([
+      { clipPath: "circle(0% at 50% 96%)", opacity: 0.4 },
+      { clipPath: "circle(38% at 50% 96%)", opacity: 1, offset: 0.35 },
+      { clipPath: "circle(110% at 50% 96%)", opacity: 1 }], { duration: 380, easing: "cubic-bezier(0.25, 0.8, 0.3, 1)", fill: "backwards" });
+    name.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 200, delay: 140, easing: "ease-out", fill: "backwards" });
+    old.querySelectorAll(".artbox").forEach(n => n.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 260, easing: "ease-in", fill: "forwards" }));
+    old.querySelectorAll(".name").forEach(n => n.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 140, easing: "ease-in", fill: "forwards" }));
+    fresh.style.opacity = "1";
+    const done = () => { old.remove(); fresh.classList.remove("morph-in"); };
+    Promise.all([a.finished, grow.finished]).then(done, done);
   }
   function morph(tileEl, v) {
     const oldFace = tileEl._face;
